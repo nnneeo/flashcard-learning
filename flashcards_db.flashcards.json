@@ -1,0 +1,77 @@
+[{
+  "_id": {
+    "$oid": "69d792dda5cdc776b44e2cf0"
+  },
+  "question": "how many hands does a finger have?",
+  "answer": "four"
+},
+{
+  "_id": {
+    "$oid": "69d7933ba5cdc776b44e2cf1"
+  },
+  "question": "where do you go when you get sick?",
+  "answer": "doctor's office"
+},
+{
+  "_id": {
+    "$oid": "69d79556a5cdc776b44e2cf2"
+  },
+  "question": "how many wheels does a tricycle have?",
+  "answer": "three"
+},
+{
+  "_id": {
+    "$oid": "69d79567a5cdc776b44e2cf3"
+  },
+  "question": "what do bees make?",
+  "answer": "honey"
+},
+{
+  "_id": {
+    "$oid": "69d79577a5cdc776b44e2cf4"
+  },
+  "question": "what do cows drink?",
+  "answer": "water"
+},
+{
+  "_id": {
+    "$oid": "69d79583a5cdc776b44e2cf5"
+  },
+  "question": "where do you go to borrow books?",
+  "answer": "library"
+},
+{
+  "_id": {
+    "$oid": "69d79596a5cdc776b44e2cf6"
+  },
+  "question": "where do you go to catch a plane?",
+  "answer": "airport"
+},
+{
+  "_id": {
+    "$oid": "69d79e894f3fea05efe73c78"
+  },
+  "question": "how many sides does a pentagon have?",
+  "answer": "five"
+},
+{
+  "_id": {
+    "$oid": "69d79ed24f3fea05efe73c79"
+  },
+  "question": "how many countries lie on the equator?",
+  "answer": "eleven"
+},
+{
+  "_id": {
+    "$oid": "69d79f534f3fea05efe73c7a"
+  },
+  "question": "how many continents are there?",
+  "answer": "seven"
+},
+{
+  "_id": {
+    "$oid": "69d79f604f3fea05efe73c7b"
+  },
+  "question": "what is the largest ocean?",
+  "answer": "pacific"
+}]
