@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 
 export default function App() {
+  const [token, setToken] = useState(localStorage.getItem("token") || "");
+  const [username, setUsername] = useState(localStorage.getItem("username") || "");
+  const [authUsername, setAuthUsername] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [isRegister, setIsRegister] = useState(false);
+  const [authError, setAuthError] = useState("");
+
   const [cards, setCards] = useState([]);
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
@@ -15,6 +22,38 @@ export default function App() {
       .then(res => res.json())
       .then(data => setCards(data))
   }, []);
+
+  async function handleAuth(e) {
+    e.preventDefault();
+    setAuthError("");
+    const url = isRegister ? "/api/auth/register" : "/api/auth/login";
+    const res = await fetch("http://localhost:8000" + url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: authUsername, password: authPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setAuthError(data.detail);
+      return;
+    }
+    if (isRegister) {
+      setIsRegister(false);
+      return;
+    }
+    localStorage.setItem("token", data.access_token);
+    localStorage.setItem("username", authUsername);
+    setToken(data.access_token);
+    setUsername(authUsername);
+  }
+
+  function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+    setToken("");
+    setUsername("");
+    setCards([]);
+  }
 
   async function addCard(e) {
     e.preventDefault();
@@ -52,8 +91,39 @@ export default function App() {
     setCards(cards.filter((c) => c.id !== id));
   }
 
+  if (!token) {
+    return (
+      <div className="container">
+        <form className="auth-form" onSubmit={handleAuth}>
+          <h2>{isRegister ? "Register" : "Login"}</h2>
+          {authError && <span className="error">{authError}</span>}
+          <span className="form-label">Username</span>
+          <input
+            type="text"
+            value={authUsername}
+            onChange={(e) => setAuthUsername(e.target.value)}
+          />
+          <span className="form-label">Password</span>
+          <input
+            type="password"
+            value={authPassword}
+            onChange={(e) => setAuthPassword(e.target.value)}
+          />
+          <button type="submit">{isRegister ? "Register" : "Login"}</button>
+          <button type="button" className="link-btn" onClick={() => { setIsRegister(!isRegister); setAuthError(""); }}>
+            {isRegister ? "Login" : "Register"}
+          </button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <div className="container">
+      <div className="topbar">
+        <span>Logged in as <strong>{username}</strong></span>
+        <button onClick={logout}>Logout</button>
+      </div>
       <form className="form" onSubmit={addCard}>
         <span className="form-label">Question</span>
         <input
