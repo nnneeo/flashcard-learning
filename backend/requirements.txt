@@ -3,5 +3,5 @@ uvicorn
 motor
 pydantic
 python-jose[cryptography]
-passlib[bcrypt]
+bcrypt
 python-multipart

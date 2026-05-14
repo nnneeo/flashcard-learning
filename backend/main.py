@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordBearer
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 from bson import ObjectId
-from passlib.context import CryptContext
+import bcrypt
 from jose import jwt
 from datetime import datetime, timedelta
 
@@ -13,7 +13,6 @@ app = FastAPI()
 SECRET_KEY = "secret"
 ALGORITHM = "HS256"
 
-pwd_context = CryptContext(schemes=["bcrypt"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 class Card(BaseModel):
@@ -43,14 +42,14 @@ async def register(user: UserCredentials):
     existing = await db.users.find_one({"username": user.username})
     if existing:
         raise HTTPException(status_code=400, detail="Username taken")
-    hashed = pwd_context.hash(user.password)
+    hashed = bcrypt.hashpw(user.password.encode(), bcrypt.gensalt()).decode()
     await db.users.insert_one({"username": user.username, "password": hashed})
     return {"ok": True}
 
 @app.post("/api/auth/login")
 async def login(user: UserCredentials):
     db_user = await db.users.find_one({"username": user.username})
-    if not db_user or not pwd_context.verify(user.password, db_user["password"]):
+    if not db_user or not bcrypt.checkpw(user.password.encode(), db_user["password"].encode()):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     token = create_token(user.username)
     return {"access_token": token, "token_type": "bearer"}
