@@ -27,18 +27,25 @@ export default function App() {
     e.preventDefault();
     setAuthError("");
     const url = isRegister ? "/api/auth/register" : "/api/auth/login";
-    const res = await fetch("http://localhost:8000" + url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: authUsername, password: authPassword }),
-    });
-    const data = await res.json();
+    let res, data;
+    try {
+      res = await fetch("http://localhost:8000" + url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: authUsername, password: authPassword }),
+      });
+      data = await res.json();
+    } catch {
+      setAuthError("Could not reach server");
+      return;
+    }
     if (!res.ok) {
       setAuthError(data.detail);
       return;
     }
     if (isRegister) {
       setIsRegister(false);
+      setAuthError("Registered! Please log in.");
       return;
     }
     localStorage.setItem("token", data.access_token);
