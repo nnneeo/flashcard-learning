@@ -1,11 +1,11 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 from bson import ObjectId
 import bcrypt
-from jose import jwt
+from jose import JWTError, jwt
 from datetime import datetime, timedelta
 
 app = FastAPI()
@@ -37,6 +37,13 @@ def create_token(username: str):
     data = {"sub": username, "exp": datetime.utcnow() + timedelta(hours=24)}
     return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
 
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload.get("sub")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
 @app.post("/api/auth/register")
 async def register(user: UserCredentials):
     existing = await db.users.find_one({"username": user.username})
@@ -55,31 +62,32 @@ async def login(user: UserCredentials):
     return {"access_token": token, "token_type": "bearer"}
 
 @app.get("/api/cards")
-async def get_cards():
+async def get_cards(username: str = Depends(get_current_user)):
     cards = []
-    async for card in db.flashcards.find():
+    async for card in db.flashcards.find({"username": username}):
         card["_id"] = str(card["_id"])
         card["id"] = card.pop("_id")
         cards.append(card)
     return cards
 
 @app.post("/api/cards")
-async def create_card(card: Card):
+async def create_card(card: Card, username: str = Depends(get_current_user)):
     card = dict(card)
+    card["username"] = username
     result = await db.flashcards.insert_one(card)
     card["id"] = str(result.inserted_id)
     del card["_id"]
     return card
 
 @app.put("/api/cards/{card_id}")
-async def update_card(card_id: str, card: Card):
+async def update_card(card_id: str, card: Card, username: str = Depends(get_current_user)):
     await db.flashcards.update_one(
-        {"_id": ObjectId(card_id)},
+        {"_id": ObjectId(card_id), "username": username},
         {"$set": dict(card)}
     )
     return {"id": card_id, "question": card.question, "answer": card.answer}
 
 @app.delete("/api/cards/{card_id}")
-async def delete_card(card_id: str):
-    await db.flashcards.delete_one({"_id": ObjectId(card_id)})
+async def delete_card(card_id: str, username: str = Depends(get_current_user)):
+    await db.flashcards.delete_one({"_id": ObjectId(card_id), "username": username})
     return {"ok": True}

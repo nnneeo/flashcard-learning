@@ -18,9 +18,12 @@ export default function App() {
   const [editAnswer, setEditAnswer] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/cards")
+    if (!token) return;
+    fetch("http://localhost:8000/api/cards", {
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }
+    })
       .then(res => res.json())
-      .then(data => setCards(data))
+      .then(data => setCards(data));
   }, []);
 
   async function handleAuth(e) {
@@ -67,7 +70,7 @@ export default function App() {
     if (question == "" || answer == "") return;
     let res = await fetch("http://localhost:8000/api/cards", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
       body: JSON.stringify({ question, answer }),
     });
     let newCard = await res.json();
@@ -85,7 +88,7 @@ export default function App() {
   async function saveEdit(id) {
     let res = await fetch("http://localhost:8000/api/cards/" + id, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
       body: JSON.stringify({ question: editQuestion, answer: editAnswer }),
     });
     let updated = await res.json();
@@ -94,7 +97,7 @@ export default function App() {
   }
 
   function deleteCard(id) {
-    fetch("http://localhost:8000/api/cards/" + id, { method: "DELETE" });
+    fetch("http://localhost:8000/api/cards/" + id, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
     setCards(cards.filter((c) => c.id !== id));
   }
 
