@@ -122,6 +122,20 @@ body {
   color: #5a5;
 }
 
+.search {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.search:focus {
+  border-color: #5a5;
+}
+
 .topbar {
   display: flex;
   justify-content: space-between;

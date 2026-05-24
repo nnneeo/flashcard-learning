@@ -9,6 +9,7 @@ export default function App() {
   const [authError, setAuthError] = useState("");
 
   const [cards, setCards] = useState([]);
+  const [search, setSearch] = useState("");
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [flipped, setFlipped] = useState({});
@@ -134,6 +135,14 @@ export default function App() {
         <span>Logged in as <strong>{username}</strong></span>
         <button onClick={logout}>Logout</button>
       </div>
+      <input
+        className="search"
+        type="text"
+        placeholder="Search cards"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
       <form className="form" onSubmit={addCard}>
         <span className="form-label">Question</span>
         <input
@@ -151,7 +160,7 @@ export default function App() {
       </form>
 
       <div className="card-list">
-        {cards.map((card) => (
+        {cards.filter(c => c.question.toLowerCase().includes(search.toLowerCase()) || c.answer.toLowerCase().includes(search.toLowerCase())).map((card) => (
           <div
             key={card.id}
             className="card"
