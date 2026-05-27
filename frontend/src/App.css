@@ -206,3 +206,28 @@ body {
   color: red;
   font-size: 0.85rem;
 }
+
+.admin-title {
+  margin-bottom: 16px;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+}
+
+.history-table th,
+.history-table td {
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+}
+
+.history-table th {
+  background: #f5f5f5;
+  font-weight: bold;
+  color: #555;
+}

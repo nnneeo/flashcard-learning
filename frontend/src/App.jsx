@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const [username, setUsername] = useState(localStorage.getItem("username") || "");
+  const [role, setRole] = useState(localStorage.getItem("role") || "");
   const [authUsername, setAuthUsername] = useState("");
   const [authPassword, setAuthPassword] = useState("");
   const [isRegister, setIsRegister] = useState(false);
@@ -17,6 +18,9 @@ export default function App() {
   const [editing, setEditing] = useState(null);
   const [editQuestion, setEditQuestion] = useState("");
   const [editAnswer, setEditAnswer] = useState("");
+
+  const [view, setView] = useState("cards");
+  const [history, setHistory] = useState([]);
 
   useEffect(() => {
     if (!token) return;
@@ -52,18 +56,35 @@ export default function App() {
       setAuthError("Registered! Please log in.");
       return;
     }
+    console.log("login response:", data);
     localStorage.setItem("token", data.access_token);
     localStorage.setItem("username", authUsername);
+    localStorage.setItem("role", data.role);
     setToken(data.access_token);
     setUsername(authUsername);
+    setRole(data.role);
   }
 
   function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("username");
+    localStorage.removeItem("role");
     setToken("");
     setUsername("");
+    setRole("");
     setCards([]);
+    setView("cards");
+    setFlipped({});
+    setHidden({});
+  }
+
+  async function openAdmin() {
+    const res = await fetch("http://localhost:8000/api/admin/history", {
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }
+    });
+    const data = await res.json();
+    setHistory(data);
+    setView("admin");
   }
 
   async function addCard(e) {
@@ -102,6 +123,19 @@ export default function App() {
     setCards(cards.filter((c) => c.id !== id));
   }
 
+  function flipCard(card) {
+    if (flipped[card.id]) {
+      setHidden({...hidden, [card.id]: true});
+    } else {
+      setFlipped({...flipped, [card.id]: true});
+      fetch("http://localhost:8000/api/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ card_id: card.id }),
+      });
+    }
+  }
+
   if (!token) {
     return (
       <div className="container">
@@ -129,11 +163,43 @@ export default function App() {
     );
   }
 
+  if (view === "admin") {
+    return (
+      <div className="container">
+        <div className="topbar">
+          <span>Logged in as <strong>{username}</strong></span>
+          <div>
+            <button onClick={() => setView("cards")}>My Cards</button>
+            <button onClick={logout}>Logout</button>
+          </div>
+        </div>
+        <h2 className="admin-title">Learning History</h2>
+        <table className="history-table">
+          <tr>
+            <th>User</th>
+            <th>Card</th>
+            <th>Time</th>
+          </tr>
+          {history.map((entry) => (
+            <tr key={entry._id}>
+              <td>{entry.username}</td>
+              <td>{entry.question}</td>
+              <td>{new Date(entry.timestamp).toLocaleString()}</td>
+            </tr>
+          ))}
+        </table>
+      </div>
+    );
+  }
+
   return (
     <div className="container">
       <div className="topbar">
         <span>Logged in as <strong>{username}</strong></span>
-        <button onClick={logout}>Logout</button>
+        <div>
+          {role === "admin" && <button onClick={openAdmin}>Admin</button>}
+          <button onClick={logout}>Logout</button>
+        </div>
       </div>
       <input
         className="search"
@@ -165,13 +231,7 @@ export default function App() {
             key={card.id}
             className="card"
             style={hidden[card.id] ? {visibility: "hidden"} : {}}
-            onClick={() => {
-              if (flipped[card.id]) {
-                setHidden({...hidden, [card.id]: true});
-              } else {
-                setFlipped({...flipped, [card.id]: true});
-              }
-            }}
+            onClick={() => flipCard(card)}
           >
             {editing === card.id ? (
               <div className="edit-form" onClick={(e) => e.stopPropagation()}>

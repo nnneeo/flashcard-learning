@@ -23,6 +23,9 @@ class UserCredentials(BaseModel):
     username: str
     password: str
 
+class HistoryEntry(BaseModel):
+    card_id: str
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -50,7 +53,7 @@ async def register(user: UserCredentials):
     if existing:
         raise HTTPException(status_code=400, detail="Username taken")
     hashed = bcrypt.hashpw(user.password.encode(), bcrypt.gensalt()).decode()
-    await db.users.insert_one({"username": user.username, "password": hashed})
+    await db.users.insert_one({"username": user.username, "password": hashed, "role": "user"})
     return {"ok": True}
 
 @app.post("/api/auth/login")
@@ -91,3 +94,25 @@ async def update_card(card_id: str, card: Card, username: str = Depends(get_curr
 async def delete_card(card_id: str, username: str = Depends(get_current_user)):
     await db.flashcards.delete_one({"_id": ObjectId(card_id), "username": username})
     return {"ok": True}
+
+@app.post("/api/history")
+async def log_history(entry: HistoryEntry, username: str = Depends(get_current_user)):
+    card = await db.flashcards.find_one({"_id": ObjectId(entry.card_id)})
+    await db.history.insert_one({
+        "username": username,
+        "card_id": entry.card_id,
+        "question": card["question"],
+        "timestamp": datetime.utcnow().isoformat()
+    })
+    return {"ok": True}
+
+@app.get("/api/admin/history")
+async def get_all_history(username: str = Depends(get_current_user)):
+    user = await db.users.find_one({"username": username})
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    history = []
+    async for entry in db.history.find().sort("timestamp", -1):
+        entry["_id"] = str(entry["_id"])
+        history.append(entry)
+    return history

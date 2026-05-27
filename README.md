@@ -19,3 +19,8 @@ npm run dev
 ```
 
 Open http://localhost:5173
+
+## Admin login
+
+username: `admin`  
+password: `pass`
