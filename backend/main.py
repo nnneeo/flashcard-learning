@@ -36,8 +36,8 @@ app.add_middleware(
 client = AsyncIOMotorClient("mongodb://localhost:27017")
 db = client.flashcards_db
 
-def create_token(username: str):
-    data = {"sub": username, "exp": datetime.utcnow() + timedelta(hours=24)}
+def create_token(username: str, role: str = "user"):
+    data = {"sub": username, "role": role, "exp": datetime.utcnow() + timedelta(hours=24)}
     return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
@@ -61,8 +61,9 @@ async def login(user: UserCredentials):
     db_user = await db.users.find_one({"username": user.username})
     if not db_user or not bcrypt.checkpw(user.password.encode(), db_user["password"].encode()):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    token = create_token(user.username)
-    return {"access_token": token, "token_type": "bearer"}
+    role = db_user.get("role", "user")
+    token = create_token(user.username, role)
+    return {"access_token": token, "token_type": "bearer", "role": role}
 
 @app.get("/api/cards")
 async def get_cards(username: str = Depends(get_current_user)):
