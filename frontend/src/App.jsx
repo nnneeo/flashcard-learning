@@ -76,6 +76,7 @@ export default function App() {
     setView("cards");
     setFlipped({});
     setHidden({});
+    setSearch("");
   }
 
   async function openAdmin() {
