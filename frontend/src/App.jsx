@@ -29,7 +29,7 @@ export default function App() {
     })
       .then(res => res.json())
       .then(data => setCards(data));
-  }, []);
+  }, [token]);
 
   async function handleAuth(e) {
     e.preventDefault();
